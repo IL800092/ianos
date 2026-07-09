@@ -45,13 +45,17 @@ framework.
    nudge.
 5. **Escape everything**: any user/AI string hitting innerHTML goes through
    `escH()`. No exceptions.
-6. **Visual identity (do not deviate)**: near-black `#030812`, blue `#4da8ff`,
-   bright `#a8dcff`, muted `#5b7ba6`, amber `#ffb454` for warnings only.
-   Chakra Petch (titles) + JetBrains Mono (body). Frosted panels,
-   `cubic-bezier(.16,1,.3,1)` springs. Three layouts: desktop (panels dock
-   right), phone portrait (bottom sheets), phone landscape (orb left, panel
-   right). Respect `prefers-reduced-motion` (CSS *and* the orb's `REDUCED`
-   flag).
+6. **Visual identity (do not deviate)**: LIGHT mode HUD — cool paper
+   `#eef3f9`, core blue `#1e6fd6`, deep-navy text `#10305a`, muted `#5c7699`,
+   amber `#b96e08` for warnings only, white frosted panels
+   (`rgba(255,255,255,.66)` + blur). The orb's canvas colors are hardcoded in
+   JS (rings + particle gradient pale-sky→core-blue) — keep them in sync with
+   the CSS palette. Chakra Petch (titles) + JetBrains Mono (body),
+   `cubic-bezier(.16,1,.3,1)` springs. Three layouts: desktop (panels open
+   CENTERED, `clamp(520px, 100vw-440px, 1040px)` wide with a two-column
+   `.p-body`), phone portrait (bottom sheets, 70dvh), phone landscape (orb
+   left, panel right). Respect `prefers-reduced-motion` (CSS *and* the orb's
+   `REDUCED` flag).
 7. **No paid APIs, no keys, no third-party accounts.** The uplink routes are
    free-only (claude.ai proxy, `window.claude.complete`, optional user-supplied
    worker URL via `set uplink`). The paste pipeline (`export` → Claude chat →
