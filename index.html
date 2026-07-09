@@ -1,14 +1,1028 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>IAN.OS</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Archivo+Expanded:wght@800&display=swap" rel="stylesheet" />
-  </head>
-  <body style="margin:0">
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>IAN.OS // JARVIS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --void:#030812;
+  --line:rgba(70,130,220,.28);
+  --line-soft:rgba(70,130,220,.14);
+  --core:#4da8ff;
+  --glow:#a8dcff;
+  --dim:#5b7ba6;
+  --amber:#ffb454;
+  --panel:rgba(9,20,44,.72);
+  --swoop:cubic-bezier(.16,1,.3,1);
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  background:var(--void);
+  color:var(--glow);
+  font-family:'JetBrains Mono',monospace;
+  position:fixed;inset:0;
+  touch-action:manipulation;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 42%,rgba(45,110,220,.10),transparent 70%),
+    repeating-linear-gradient(0deg,transparent 0 47px,rgba(70,130,220,.05) 47px 48px),
+    repeating-linear-gradient(90deg,transparent 0 47px,rgba(70,130,220,.05) 47px 48px);
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 90% 90% at 50% 50%,transparent 55%,rgba(0,2,8,.75));
+}
+
+/* ---------- HUD chrome ---------- */
+.corner{position:fixed;width:22px;height:22px;border:1px solid var(--core);opacity:.5;z-index:5;pointer-events:none}
+.corner.tl{top:calc(10px + var(--safe-t));left:10px;border-right:0;border-bottom:0}
+.corner.tr{top:calc(10px + var(--safe-t));right:10px;border-left:0;border-bottom:0}
+.corner.bl{bottom:calc(10px + var(--safe-b));left:10px;border-right:0;border-top:0}
+.corner.br{bottom:calc(10px + var(--safe-b));right:10px;border-left:0;border-top:0}
+
+header{
+  position:fixed;top:var(--safe-t);left:0;right:0;z-index:10;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:20px 28px 0;pointer-events:none;
+}
+.wordmark{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:16px;letter-spacing:.3em;color:var(--glow)}
+.wordmark span{color:var(--core);font-weight:400}
+.sub{font-size:8.5px;letter-spacing:.26em;color:var(--dim);margin-top:4px;text-transform:uppercase}
+.clockbox{text-align:right}
+.clock{font-size:19px;font-weight:300;letter-spacing:.12em;color:var(--glow)}
+.clock b{font-weight:500;color:var(--core)}
+.datesess{font-size:8.5px;letter-spacing:.2em;color:var(--dim);margin-top:3px;text-transform:uppercase}
+
+/* ---------- tabs / chips ---------- */
+nav{
+  position:fixed;z-index:10;display:flex;gap:8px;
+  top:calc(84px + var(--safe-t));left:28px;right:28px;
+  overflow-x:auto;scrollbar-width:none;padding-bottom:4px;
+  -webkit-overflow-scrolling:touch;
+}
+nav::-webkit-scrollbar{display:none}
+.chip{
+  font-family:'JetBrains Mono',monospace;
+  background:rgba(7,16,36,.6);border:1px solid var(--line);
+  color:var(--dim);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  padding:9px 14px;cursor:pointer;white-space:nowrap;flex:none;
+  transition:color .25s,border-color .25s,background .25s;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.chip.active,.chip:hover{color:var(--glow);border-color:var(--core);background:rgba(45,110,220,.12)}
+.chip:focus-visible{outline:1px solid var(--glow);outline-offset:2px}
+.chip.custom{border-style:dashed}
+
+/* ---------- ORB ---------- */
+#orbwrap{position:fixed;inset:0;display:grid;place-items:center;z-index:1;pointer-events:none}
+#orb{display:block}
+.state-label{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:4;
+  font-size:9px;letter-spacing:.45em;color:var(--core);text-transform:uppercase;
+  transition:opacity .4s;text-align:center;pointer-events:none;white-space:nowrap;
+}
+.state-label::before,.state-label::after{content:'—';color:var(--line);margin:0 10px}
+
+/* ---------- PANELS ---------- */
+.panel{
+  position:fixed;z-index:20;overflow-y:auto;
+  background:var(--panel);
+  border:1px solid var(--line);
+  backdrop-filter:blur(22px) saturate(1.3);
+  -webkit-backdrop-filter:blur(22px) saturate(1.3);
+  box-shadow:0 24px 60px rgba(0,4,16,.6),inset 0 1px 0 rgba(168,220,255,.08);
+  padding:18px 20px 20px;
+  opacity:0;pointer-events:none;
+  scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+  -webkit-overflow-scrolling:touch;
+}
+.panel::-webkit-scrollbar{width:4px}
+.panel::-webkit-scrollbar-thumb{background:var(--line)}
+.p-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid var(--line-soft);padding-bottom:11px;position:sticky;top:-18px;background:inherit;z-index:2}
+.p-title{font-family:'Chakra Petch',sans-serif;font-size:12px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;color:var(--glow)}
+.p-close{background:none;border:1px solid var(--line);color:var(--dim);width:26px;height:26px;cursor:pointer;font-size:11px;line-height:1;transition:all .2s;flex:none}
+.p-close:hover{color:var(--glow);border-color:var(--core)}
+.row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid var(--line-soft);font-size:11.5px;gap:12px}
+.row:last-child{border-bottom:0}
+.row .l{color:var(--glow);min-width:0}
+.row .l small{display:block;color:var(--dim);font-size:9px;letter-spacing:.08em;margin-top:3px}
+.row .r{color:var(--core);white-space:nowrap;font-size:10px;letter-spacing:.08em;text-align:right;flex:none}
+.row .r.warn{color:var(--amber)}
+.meter{height:3px;background:var(--line-soft);margin-top:7px;width:120px;max-width:100%}
+.meter i{display:block;height:100%;background:var(--core);box-shadow:0 0 6px var(--core)}
+.section-label{font-size:8.5px;letter-spacing:.28em;color:var(--dim);text-transform:uppercase;margin:14px 0 2px}
+.p-body > .section-label:first-child{margin-top:0}
+.sheet-grip{display:none;width:38px;height:3px;background:var(--line);margin:0 auto 12px}
+
+/* ---------- CHAT ---------- */
+#transcript{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:15;
+  width:min(620px,calc(100vw - 44px));
+  display:flex;flex-direction:column;gap:9px;overflow-y:auto;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  -webkit-mask-image:linear-gradient(to bottom,transparent,black 16%);
+  mask-image:linear-gradient(to bottom,transparent,black 16%);
+}
+#transcript::-webkit-scrollbar{display:none}
+.msg{
+  font-size:12px;line-height:1.6;max-width:88%;
+  padding:10px 14px;border:1px solid var(--line);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  opacity:0;transform:translateY(14px) scale(.97);filter:blur(6px);
+  animation:msgIn .5s var(--swoop) forwards;word-break:break-word;
+}
+@keyframes msgIn{to{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+.msg.user{align-self:flex-end;background:rgba(45,110,220,.16);color:var(--glow);border-color:rgba(77,168,255,.4)}
+.msg.jarvis{align-self:flex-start;background:rgba(9,20,44,.78);color:#cfe6ff}
+.msg.jarvis::before{content:'JARVIS';display:block;font-size:8px;letter-spacing:.3em;color:var(--core);margin-bottom:4px}
+.msg.thinking i{display:inline-block;width:5px;height:5px;background:var(--core);border-radius:50%;margin-right:5px;animation:blink 1s infinite}
+.msg.thinking i:nth-child(2){animation-delay:.2s}
+.msg.thinking i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,100%{opacity:.2}50%{opacity:1}}
+
+.cmdbar{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:16;
+  bottom:calc(18px + var(--safe-b));
+  width:min(620px,calc(100vw - 32px));
+  display:flex;align-items:center;gap:8px;
+  background:rgba(7,16,36,.85);border:1px solid var(--line);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  padding:7px 8px;
+  box-shadow:0 18px 50px rgba(0,4,16,.65),inset 0 1px 0 rgba(168,220,255,.07);
+  transition:border-color .3s;
+}
+.cmdbar:focus-within{border-color:var(--core)}
+.micbtn,.sendbtn,.voicebtn{
+  width:42px;height:42px;flex:none;display:grid;place-items:center;
+  background:transparent;border:1px solid var(--line);color:var(--dim);
+  cursor:pointer;transition:all .25s var(--swoop);
+}
+.micbtn:hover,.sendbtn:hover,.voicebtn:hover{color:var(--glow);border-color:var(--core)}
+.micbtn svg,.sendbtn svg,.voicebtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.micbtn.live{color:var(--void);background:var(--core);border-color:var(--core);animation:micPulse 1.4s infinite}
+@keyframes micPulse{0%,100%{box-shadow:0 0 14px rgba(77,168,255,.4)}50%{box-shadow:0 0 30px rgba(77,168,255,.8)}}
+.voicebtn.on{color:var(--core);border-color:var(--core)}
+#cmdinput{
+  flex:1;background:transparent;border:0;outline:0;color:var(--glow);
+  font-family:'JetBrains Mono',monospace;
+  font-size:16px; /* 16px stops iOS auto-zoom on focus */
+  letter-spacing:.01em;height:42px;min-width:0;
+}
+#cmdinput::placeholder{color:var(--dim);opacity:.7;letter-spacing:.04em;font-size:13px}
+
+/* toast */
+#toast{
+  position:fixed;top:calc(64px + var(--safe-t));left:50%;transform:translateX(-50%) translateY(-12px);
+  background:rgba(9,20,44,.94);border:1px solid var(--amber);color:var(--amber);
+  font-size:9.5px;letter-spacing:.12em;padding:10px 16px;z-index:50;line-height:1.6;
+  opacity:0;transition:all .4s var(--swoop);pointer-events:none;max-width:86vw;text-align:center;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* =====================================================
+   LAYOUT MODES
+===================================================== */
+
+/* ----- desktop / large (default) ----- */
+@media (min-width:761px){
+  nav{left:36px;right:auto;top:calc(100px + var(--safe-t));flex-direction:column;overflow:visible}
+  .chip{min-width:160px;text-align:left}
+  .chip::before{content:'▸ ';color:var(--core);opacity:0;transition:opacity .2s}
+  .chip.active::before,.chip:hover::before{opacity:1}
+  .panel{right:36px;top:calc(104px + var(--safe-t));width:min(400px,calc(100vw - 72px));
+    max-height:calc(100dvh - 280px);
+    transform:translateY(30px) scale(.94);filter:blur(10px);
+    transition:opacity .5s var(--swoop),transform .55s var(--swoop),filter .5s var(--swoop);}
+  .panel.show{opacity:1;transform:translateY(0) scale(1);filter:blur(0);pointer-events:auto}
+  .state-label{top:calc(50% + 200px)}
+  #transcript{bottom:110px;max-height:32vh}
+}
+
+/* ----- phone PORTRAIT: orb top, bottom-sheet panels ----- */
+@media (max-width:760px) and (orientation:portrait){
+  header{padding:14px 18px 0}
+  .wordmark{font-size:13px;letter-spacing:.24em}
+  .sub{display:none}
+  .clock{font-size:15px}
+  .datesess{font-size:7.5px}
+  nav{top:calc(58px + var(--safe-t));left:18px;right:18px}
+  .chip{padding:8px 12px;font-size:8.5px}
+  #orbwrap{place-items:start center;padding-top:calc(108px + var(--safe-t))}
+  .state-label{top:auto;bottom:calc(46dvh)}
+  #transcript{bottom:calc(84px + var(--safe-b));max-height:30dvh}
+  .cmdbar{bottom:calc(14px + var(--safe-b))}
+  /* iOS-style bottom sheet */
+  .panel{
+    left:0;right:0;bottom:0;top:auto;width:auto;
+    max-height:62dvh;
+    border-left:0;border-right:0;border-bottom:0;
+    padding-bottom:calc(20px + var(--safe-b));
+    transform:translateY(103%);filter:none;opacity:1;
+    transition:transform .55s var(--swoop);
+  }
+  .panel.show{transform:translateY(0);pointer-events:auto}
+  .sheet-grip{display:block}
+  .p-head{top:-18px}
+}
+
+/* ----- phone LANDSCAPE: orb left, sheet right ----- */
+@media (max-width:960px) and (orientation:landscape) and (max-height:520px){
+  header{padding:10px 18px 0}
+  .wordmark{font-size:12px}
+  .sub{display:none}
+  .clock{font-size:14px}
+  .datesess{display:none}
+  nav{top:auto;bottom:calc(76px + var(--safe-b));left:14px;right:auto;flex-direction:column;gap:6px;max-height:46dvh;overflow-y:auto}
+  .chip{padding:7px 10px;font-size:8px;min-width:110px;text-align:left}
+  #orbwrap{place-items:center start;padding-left:8vw}
+  .state-label{left:calc(8vw + 19dvh);top:calc(50% + 21dvh);transform:none}
+  .panel{
+    right:14px;top:calc(48px + var(--safe-t));left:auto;bottom:auto;
+    width:min(46vw,380px);max-height:calc(100dvh - 130px);
+    transform:translateX(40px) scale(.95);filter:blur(8px);
+    transition:opacity .5s var(--swoop),transform .55s var(--swoop),filter .5s var(--swoop);
+  }
+  .panel.show{opacity:1;transform:translateX(0) scale(1);filter:blur(0);pointer-events:auto}
+  #transcript{left:calc(8vw);transform:none;width:min(46vw,420px);bottom:calc(70px + var(--safe-b));max-height:34dvh;align-items:flex-start}
+  .cmdbar{left:14px;transform:none;width:min(60vw,520px);bottom:calc(12px + var(--safe-b))}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
+
+<header>
+  <div>
+    <div class="wordmark">IAN.OS <span>// JARVIS</span></div>
+    <div class="sub">Personal intelligence layer · v6.0</div>
+  </div>
+  <div class="clockbox">
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="datesess" id="datesess">—</div>
+  </div>
+</header>
+
+<nav id="tabs"></nav>
+
+<div id="orbwrap"><canvas id="orb"></canvas></div>
+<div class="state-label" id="stateLabel">Standby</div>
+
+<div id="panelHost"></div>
+
+<div id="transcript"></div>
+
+<div class="cmdbar">
+  <button class="micbtn" id="micbtn" title="Voice input" aria-label="Voice input">
+    <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+  </button>
+  <input id="cmdinput" type="text" placeholder="Speak or type — try “make a Pokémon panel”" autocomplete="off" autocapitalize="off">
+  <button class="voicebtn on" id="voicebtn" title="Spoken replies on/off" aria-label="Toggle spoken replies">
+    <svg viewBox="0 0 24 24"><path d="M4 10v4h4l5 4V6l-5 4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+  </button>
+  <button class="sendbtn" id="sendbtn" title="Send" aria-label="Send">
+    <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* =====================================================
+   IAN.OS // JARVIS v3
+   — fixed uplink format, every panel editable,
+     retry + offline fallback so commands always land
+===================================================== */
+
+/* ---------- storage adapter: artifact storage → localStorage → memory ---------- */
+const mem = {};
+const store = {
+  async get(k){
+    if (window.storage) { try { const r = await window.storage.get(k); if (r && r.value != null) return r.value; } catch(_){} }
+    try { const v = localStorage.getItem(k); if (v != null) return v; } catch(_){}
+    return mem[k] ?? null;
+  },
+  async set(k,v){
+    if (window.storage) { try { await window.storage.set(k,v); return; } catch(_){} }
+    try { localStorage.setItem(k,v); return; } catch(_){}
+    mem[k]=v;
+  }
+};
+const PANELS_KEY='ianos-jarvis-panels-v6';
+const UPLINK_KEY='ianos-jarvis-uplink';
+let uplink=null;   // personal Cloudflare Worker URL — makes AI work anywhere
+
+/* ---------- clock ---------- */
+const boot=Date.now();
+function tick(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  document.getElementById('clock').innerHTML=`${p(d.getHours())}:${p(d.getMinutes())}<b>:${p(d.getSeconds())}</b>`;
+  const up=Math.floor((Date.now()-boot)/1000);
+  document.getElementById('datesess').textContent=
+    d.toLocaleDateString('en-CA',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase()
+    +` · SESSION ${p(Math.floor(up/60))}:${p(up%60)}`;
+}
+tick(); setInterval(tick,1000);
+
+/* ---------- default panel specs (restorable) ---------- */
+const daysTo = t => {           // whole days from today's midnight to the target date
+  const n = new Date();
+  return Math.max(0, Math.round((new Date(t + 'T00:00:00') - new Date(n.getFullYear(), n.getMonth(), n.getDate())) / 864e5));
+};
+const CORE_IDS=['schedule','apps','training','projects'];
+function defaultPanels(){ return [
+  {id:'schedule',title:'Today · Grade 12',tab:'Today',sections:[{label:null,rows:[
+    {l:'AP Calculus',sub:'Period 1',r:'08:30'},
+    {l:'AP Chemistry',sub:'Period 2',r:'09:45'},
+    {l:'AP Physics',sub:'Period 3',r:'11:00'},
+    {l:'English 4U',sub:'Period 4',r:'13:00'},
+    {l:'AP Biology',sub:'Period 5',r:'14:15'},
+    {l:'Music — Alto Sax',sub:'Rehearsal block',r:'15:30'},
+    {l:'Vertical Jump — Lower',sub:'Power clean · half squat · RDL',r:'17:30',warn:true}
+  ]}]},
+  {id:'apps',title:'University Ops',tab:'Uni Apps',sections:[
+    {label:'UK Medicine',rows:[
+      {l:'UCAT',sub:'Book & sit — summer window',r:'WINDOW OPEN',warn:true},
+      {l:'UCAS submission',sub:'Oct 15, 2026 deadline',due:'2026-10-15',r:'',warn:true}
+    ]},
+    {label:'North America — Mechatronics',rows:[
+      {l:'SAT retake',sub:'Target 1450–1500',r:'AUG–SEP'},
+      {l:'OUAC',sub:'Waterloo · McMaster · TMU',r:'ON TRACK'},
+      {l:'Common App essay',sub:'Scene-anchored resilience draft',r:'55%',meter:55},
+      {l:'UC application',sub:'Berkeley — test-blind',r:'QUEUED'}
+    ]}
+  ]},
+  {id:'training',title:'Vertical Protocol',tab:'Training',sections:[
+    {label:'Lower — Power',rows:[
+      {l:'Power Clean',r:'115 LB'},
+      {l:'Half Squat',r:'165 LB'},
+      {l:'RDL',r:'135 LB'},
+      {l:'Bulgarian SS Jumps',r:'3×6 /LEG'}
+    ]},
+    {label:'Support',rows:[
+      {l:'Isaiah Rivera ISO',sub:'Knee health protocol',r:'ACTIVE'},
+      {l:'Upper days',sub:'Nippard Fundamentals',r:'ACTIVE'},
+      {l:'Mission',sub:'5\'9" → rim contact',r:'IN PURSUIT',warn:true}
+    ]}
+  ]},
+  {id:'stats',title:'Life Stats',tab:'Stats',sections:[
+    {label:'Academics',rows:[
+      {l:'Grade 11 average',sub:'7 courses + external Bio 98',r:'97',meter:97},
+      {l:'SAT',sub:'Retake Aug/Sep — target 1450-1500',r:'1360 → 1500',warn:true},
+      {l:'AP load',sub:'Calc · Bio · Chem · Physics',r:'4 COURSES'}
+    ]},
+    {label:'Engine',rows:[
+      {l:'Instruments',sub:'Alto sax + piano',r:'10+ YRS'},
+      {l:'Sports played',sub:'Soccer · V-ball · Bball · Tennis · Ultimate',r:'5'},
+      {l:'Apps shipped',sub:'IAN.OS · StudyHub · ClinicOS · Portfolio',r:'4'},
+      {l:'Vertical mission',sub:'5\'9" → rim contact',r:'IN PURSUIT',warn:true}
+    ]}
+  ]},
+  {id:'ecs',title:'EC Portfolio · Rated',tab:'EC Rating',sections:[
+    {label:'Tier 1 — The Spike',rows:[
+      {l:'WWMF Regional Director',sub:'Canada lead · global non-profit',r:'T1 · 88',meter:88,warn:true},
+      {l:'ClinicOS EMR',sub:'Full-stack · 11,254-drug database',r:'T1 · 85',meter:85}
+    ]},
+    {label:'Tier 2 — Depth',rows:[
+      {l:'Music',sub:'Dual instrument · 10+ yr commitment',r:'T2 · 78',meter:78},
+      {l:'IAN.OS + StudyHub',sub:'Shipped, deployed, iterated',r:'T2 · 75',meter:75}
+    ]},
+    {label:'Tier 3 — Breadth',rows:[
+      {l:'School athletics',sub:'5 sports · 3 seasons/yr · Gr 9-11',r:'T3 · 62',meter:62},
+      {l:'DECA / HOSA exec',sub:'Applications pending — could jump tiers',r:'PENDING',warn:true}
+    ]},
+    {label:'Read',rows:[
+      {l:'Narrative',sub:'Builder who leads: software + international org + decade of music',r:'STRONG'}
+    ]}
+  ]},
+  {id:'projects',title:'Active Builds',tab:'Projects',sections:[{label:null,rows:[
+    {l:'IAN.OS',sub:'Life dashboard · GitHub Pages',r:'LIVE'},
+    {l:'JARVIS layer',sub:'You are here',r:'V3',warn:true},
+    {l:'StudyHub',sub:'React/Vite grade tracker',r:'LIVE'},
+    {l:'ClinicOS',sub:'Vue EMR · 11,254 drugs indexed',r:'SHIPPED'},
+    {l:'WWMF',sub:'Canadian Regional Director',r:'ONGOING'},
+    {l:'Portfolio',sub:'Navy/brass · waveform motif',r:'LIVE'}
+  ]}]}
+];}
+let panels=defaultPanels();   // the whole dashboard is editable + persisted
+let activePanel=null;
+
+/* ---------- panel rendering ---------- */
+const host=document.getElementById('panelHost');
+const tabs=document.getElementById('tabs');
+const escH=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function renderRows(rows){
+  return (rows||[]).map(r=>{
+    const meter=(r.meter!=null&&isFinite(r.meter))
+      ?`<span class="meter"><i style="width:${Math.max(0,Math.min(100,+r.meter))}%"></i></span>`:'';
+    // rows with a due date compute their countdown at render time, so it never goes stale
+    const right=(typeof r.due==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(r.due))?'T-'+daysTo(r.due)+'D':(r.r??'');
+    return `<div class="row">
+      <span class="l">${escH(r.l)}${r.sub?`<small>${escH(r.sub)}</small>`:''}${meter}</span>
+      <span class="r${r.warn?' warn':''}">${escH(right)}</span>
+    </div>`;
+  }).join('');
+}
+function renderAll(){
+  host.innerHTML=panels.map(spec=>`
+    <div class="panel" id="panel-${escH(spec.id)}">
+      <div class="sheet-grip"></div>
+      <div class="p-head">
+        <div class="p-title">${escH(spec.title)}</div>
+        <button class="p-close" data-close>✕</button>
+      </div>
+      <div class="p-body">
+        ${(spec.sections||[]).map(s=>
+          (s.label?`<div class="section-label">${escH(s.label)}</div>`:'')+renderRows(s.rows)
+        ).join('')}
+      </div>
+    </div>`).join('');
+  tabs.innerHTML=panels.map(spec=>
+    `<button class="chip${CORE_IDS.includes(spec.id)?'':' custom'}" data-panel="${escH(spec.id)}">${escH(spec.tab||spec.title)}</button>`
+  ).join('');
+  host.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closePanels));
+  tabs.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+    c.dataset.panel===activePanel?closePanels():openPanel(c.dataset.panel);
+  }));
+  if(activePanel)openPanel(activePanel,true);
+}
+function openPanel(id,instant){
+  activePanel=panels.some(p=>p.id===id)?id:null;
+  host.querySelectorAll('.panel').forEach(el=>el.classList.toggle('show',el.id==='panel-'+activePanel));
+  tabs.querySelectorAll('.chip').forEach(c=>c.classList.toggle('active',c.dataset.panel===activePanel));
+  if(activePanel&&!instant){
+    const chip=tabs.querySelector(`.chip[data-panel="${activePanel}"]`);
+    chip&&chip.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  }
+}
+function closePanels(){activePanel=null;openPanel(null,true);}
+addEventListener('keydown',e=>{if(e.key==='Escape')closePanels();});
+
+async function savePanels(){ await store.set(PANELS_KEY, JSON.stringify(panels)); }
+async function loadPanels(){
+  try{
+    const raw=await store.get(PANELS_KEY);
+    if(raw){ const p=JSON.parse(raw); if(Array.isArray(p)&&p.length) panels=p; }
+  }catch(_){}
+  renderAll();
+}
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg,ms=5000){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),ms);
+}
+
+/* ---------- transcript ---------- */
+const transcript=document.getElementById('transcript');
+function addMsg(text,who){
+  const d=document.createElement('div');
+  d.className='msg '+who; d.textContent=text;
+  transcript.appendChild(d);
+  transcript.scrollTop=transcript.scrollHeight;
+  return d;
+}
+function addThinking(){
+  const d=document.createElement('div');
+  d.className='msg jarvis thinking';
+  d.innerHTML='<i></i><i></i><i></i>';
+  transcript.appendChild(d);
+  transcript.scrollTop=transcript.scrollHeight;
+  return d;
+}
+
+/* ---------- ORB ---------- */
+const canvas=document.getElementById('orb'), ctx=canvas.getContext('2d');
+let W,H,R;
+function sizeOrb(){
+  const portrait=matchMedia('(max-width:760px) and (orientation:portrait)').matches;
+  const landPhone=matchMedia('(max-width:960px) and (orientation:landscape) and (max-height:520px)').matches;
+  let s;
+  if(portrait)      s=Math.min(innerWidth*0.72, innerHeight*0.36);
+  else if(landPhone)s=Math.min(innerHeight*0.62, innerWidth*0.4);
+  else              s=Math.min(innerWidth, innerHeight)*0.58;
+  const dpr=Math.min(devicePixelRatio||1,2);
+  W=canvas.width=s*dpr; H=canvas.height=s*dpr;
+  canvas.style.width=canvas.style.height=s+'px';
+  R=s*dpr*0.27; canvas._dpr=dpr;
+}
+sizeOrb(); addEventListener('resize',sizeOrb); addEventListener('orientationchange',()=>setTimeout(sizeOrb,300));
+
+const N=750;
+const pts=Array.from({length:N},()=>{
+  const u=Math.random()*2-1, th=Math.random()*Math.PI*2;
+  const r=0.55+Math.pow(Math.random(),0.4)*0.45;
+  const s=Math.sqrt(1-u*u);
+  return {x:s*Math.cos(th)*r,y:u*r,z:s*Math.sin(th)*r,tw:Math.random()*Math.PI*2,sp:0.4+Math.random()*0.8};
+});
+const REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let state='idle',speed=0.0016,targetSpeed=0.0016,amp=0,targetAmp=0,rot=0,t=0;
+const STATE_CFG={
+  idle:{speed:0.0016,amp:0,label:'Standby'},
+  listening:{speed:0.0007,amp:0.9,label:'Listening'},
+  thinking:{speed:0.010,amp:0.3,label:'Processing'},
+  speaking:{speed:0.003,amp:0.6,label:'Responding'}
+};
+function setState(s){
+  state=s; targetSpeed=STATE_CFG[s].speed; targetAmp=STATE_CFG[s].amp;
+  const el=document.getElementById('stateLabel');
+  el.style.opacity=0;
+  setTimeout(()=>{el.textContent=STATE_CFG[s].label;el.style.opacity=1;},220);
+}
+function drawOrb(){
+  t+=0.016;
+  speed+=(targetSpeed-speed)*0.05;
+  amp+=(targetAmp-amp)*0.06;
+  rot+=speed*(REDUCED?0.12:1);
+  ctx.clearRect(0,0,W,H);
+  const dpr=canvas._dpr||1, cx=W/2, cy=H/2;
+  ctx.save(); ctx.translate(cx,cy);
+  ctx.strokeStyle='rgba(77,168,255,.35)'; ctx.lineWidth=1*dpr;
+  ctx.beginPath(); ctx.arc(0,0,R*1.5,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='rgba(77,168,255,.75)';
+  for(let i=0;i<36;i++){
+    const a=i/36*Math.PI*2+rot*2, long=i%3===0;
+    const r1=R*1.5, r2=R*1.5+(long?11:5)*dpr;
+    ctx.globalAlpha=long?0.8:0.35;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*r1,Math.sin(a)*r1);
+    ctx.lineTo(Math.cos(a)*r2,Math.sin(a)*r2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha=.5; ctx.setLineDash([2*dpr,6*dpr]);
+  ctx.beginPath(); ctx.arc(0,0,R*1.32,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,R*1.15);
+  g.addColorStop(0,'rgba(90,170,255,.16)'); g.addColorStop(1,'transparent');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  const cosr=Math.cos(rot),sinr=Math.sin(rot),tilt=0.35,cost=Math.cos(tilt),sint=Math.sin(tilt);
+  for(const p of pts){
+    const pulse=REDUCED?1:1+amp*0.10*Math.sin(t*p.sp*3+p.tw);
+    let x=p.x*pulse,y=p.y*pulse,z=p.z*pulse;
+    let x1=x*cosr-z*sinr,z1=x*sinr+z*cosr;
+    let y1=y*cost-z1*sint,z2=y*sint+z1*cost;
+    const persp=1/(1.6-z2*0.45);
+    const sx=cx+x1*R*persp, sy=cy+y1*R*persp;
+    const depth=(z2+1)/2, a=0.12+depth*0.78, sz=(0.7+depth*1.5)*dpr;
+    ctx.fillStyle=`rgba(${140+depth*100|0},${200+depth*40|0},255,${a})`;
+    ctx.fillRect(sx,sy,sz,sz);
+  }
+  requestAnimationFrame(drawOrb);
+}
+drawOrb();
+
+/* ---------- spoken replies ---------- */
+let voiceOn=true;
+const synthOK='speechSynthesis' in window;
+document.getElementById('voicebtn').addEventListener('click',e=>{
+  voiceOn=!voiceOn;
+  e.currentTarget.classList.toggle('on',voiceOn);
+  if(!voiceOn&&synthOK)speechSynthesis.cancel();
+});
+function speak(text){
+  if(!voiceOn||!synthOK){setState('idle');return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  const vs=speechSynthesis.getVoices();
+  u.voice=vs.find(v=>/Daniel|Google UK English Male|en-GB/i.test(v.name+v.lang))||null;
+  u.rate=1.02; u.pitch=0.92;
+  u.onstart=()=>setState('speaking');
+  u.onend=()=>setState('idle');
+  u.onerror=()=>setState('idle');
+  speechSynthesis.speak(u);
+  setTimeout(()=>{if(state==='speaking'&&!speechSynthesis.speaking)setState('idle');},15000);
+}
+if(synthOK)speechSynthesis.getVoices();
+
+/* ---------- AI uplink: multi-route with auto-failover ----------
+   Different Claude clients expose the AI differently. We try each
+   route until one answers, then remember the winner. */
+let convo=[];   // [{who:'user'|'jarvis', text}]
+function buildPrompt(q, nudge){
+  return `You are JARVIS, the AI layer of IAN.OS — the personal HUD of Ian, a Grade 12 student at Bayview Glen in Toronto. Voice: composed, dry wit, brief; "sir" occasionally. Replies are 1-3 sentences.
+
+Ian's context: dual-track applicant for Fall 2027 (UK Medicine: UCAT summer 2026, UCAS due Oct 15 2026; Mechatronics: Waterloo/McMaster/TMU via OUAC, US via Common App, UC Berkeley test-blind). SAT 1360, retake Aug/Sep targeting 1450-1500. Grade 11 avg 97. Courses: AP Calc/Bio/Chem/Physics, Music, English. Vertical jump program (power clean, half squat, RDL; 5'9" chasing rim). Projects: IAN.OS, StudyHub, ClinicOS, portfolio, WWMF Canadian Regional Director. 10+ yrs alto sax (E-flat) and piano.
+
+You control the dashboard. CURRENT PANELS (full JSON — you may edit ANY of them, including core ones):
+${JSON.stringify(panels)}
+
+Core panel ids that must never be DELETED (updates are fine): ${CORE_IDS.join(', ')}.
+
+RESPONSE FORMAT — reply with ONE raw JSON object and NOTHING else (no markdown, no fences, no commentary):
+{"reply":"<1-3 sentence reply>","action":"open"|"create"|"update"|"delete"|"none","panelId":"<id or null>","spec":<full panel spec or null>}
+
+Actions:
+- "open": show existing panel panelId.
+- "create": new panel; provide complete "spec"; invent good HUD-style content when Ian is vague.
+- "update": modify ANY existing panel — return its COMPLETE updated spec (keep everything you aren't changing), panelId = its id.
+- "delete": remove a non-core panel by panelId.
+- "none": conversation only.
+
+Panel spec shape:
+{"id":"kebab-case","title":"PANEL TITLE","tab":"Short Tab","sections":[{"label":"Section or null","rows":[{"l":"Main text","sub":"subtext (optional)","r":"RIGHT VALUE","warn":true (optional),"meter":0-100 (optional)}]}]}
+Keep panels tight: 1-3 sections, 3-8 rows each, ALL-CAPS right values.
+
+RECENT CONVERSATION:
+${convo.slice(-8).map(m=>(m.who==='user'?'IAN: ':'JARVIS: ')+m.text).join('\n')||'(none yet)'}
+
+NEW MESSAGE FROM IAN: ${q}
+${nudge?'\nYOUR LAST ATTEMPT WAS NOT VALID JSON. Respond again with ONLY the raw JSON object.':''}
+Respond now with the raw JSON object only.`;
+}
+
+function extractJSON(text){
+  const start=text.indexOf('{');
+  if(start===-1)return null;
+  let depth=0,inStr=false,escp=false;
+  for(let i=start;i<text.length;i++){
+    const c=text[i];
+    if(inStr){ if(escp)escp=false; else if(c==='\\')escp=true; else if(c==='"')inStr=false; continue; }
+    if(c==='"')inStr=true;
+    else if(c==='{')depth++;
+    else if(c==='}'){depth--; if(depth===0){
+      try{return JSON.parse(text.slice(start,i+1));}catch(_){return null;}
+    }}
+  }
+  return null;
+}
+
+async function fetchRoute(model, prompt){
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model, max_tokens:1000, messages:[{role:'user', content:prompt}]})
+  });
+  let data;
+  try{ data=await res.json(); }
+  catch(_){ throw new Error('unreadable response ('+res.status+')'); }
+  if(data.error) throw new Error(data.error.message||data.error.type||'api error');
+  const text=(Array.isArray(data.content)?data.content:[])
+    .filter(b=>b&&b.type==='text').map(b=>b.text).join('\n')
+    || (typeof data.completion==='string'?data.completion:'')
+    || (typeof data.content==='string'?data.content:'');
+  if(!text) throw new Error('empty response');
+  return text;
+}
+function workerRoute(){
+  return {name:'MY-WORKER', run:async p=>{
+    const res=await fetch(uplink,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:[{role:'user',content:p}]})});
+    let data; try{ data=await res.json(); }catch(_){ throw new Error('unreadable ('+res.status+')'); }
+    if(data.error) throw new Error(data.error.message||data.error.type||'worker error');
+    const text=(Array.isArray(data.content)?data.content:[]).filter(b=>b&&b.type==='text').map(b=>b.text).join('\n');
+    if(!text) throw new Error('empty response');
+    return text;
+  }};
+}
+const ROUTES=[
+  {name:'SONNET-4.6',  run:p=>fetchRoute('claude-sonnet-4-6',p)},
+  {name:'APP-BRIDGE',  run:async p=>{
+    if(!(window.claude&&typeof window.claude.complete==='function')) throw new Error('bridge not present');
+    const r=await window.claude.complete(p);
+    if(typeof r==='string'&&r.trim()) return r;
+    if(r&&Array.isArray(r.content)) return r.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    throw new Error('empty bridge reply');
+  }},
+  {name:'SONNET-3.5',  run:p=>fetchRoute('claude-3-5-sonnet-20241022',p)}
+];
+let goodRoute=null;
+
+async function callAI(prompt){
+  const errs=[];
+  let order=goodRoute!=null ? [ROUTES[goodRoute],...ROUTES.filter((_,i)=>i!==goodRoute)] : ROUTES.slice();
+  if(uplink) order=[workerRoute(),...order];   // personal uplink always gets first shot
+  for(const route of order){
+    try{
+      const text=await route.run(prompt);
+      const idx=ROUTES.indexOf(route);
+      if(idx>-1)goodRoute=idx;
+      return text;
+    }catch(e){ errs.push(route.name+': '+String(e.message||e)); }
+  }
+  throw new Error(errs.join(' | '));
+}
+
+async function askJarvis(q){
+  convo.push({who:'user',text:q});
+  if(convo.length>16)convo=convo.slice(-16);
+  let text=await callAI(buildPrompt(q,false));
+  let out=extractJSON(text);
+  if(!out||!out.reply){
+    text=await callAI(buildPrompt(q,true));
+    out=extractJSON(text);
+  }
+  const reply=(out&&out.reply)?out.reply:text.slice(0,300);
+  convo.push({who:'jarvis',text:reply});
+  if(!out||!out.reply) return {reply,action:'none',panelId:null,spec:null};
+  return out;
+}
+
+/* ---------- diagnostics ---------- */
+async function runDiagnostics(){
+  addMsg('Running uplink diagnostics…','jarvis');
+  const ping='Reply with exactly this JSON and nothing else: {"reply":"pong","action":"none","panelId":null,"spec":null}';
+  const list=uplink?[workerRoute(),...ROUTES]:ROUTES;
+  for(const route of list){
+    let line;
+    const t0=Date.now();
+    try{
+      const text=await route.run(ping);
+      const ok=extractJSON(text);
+      line=route.name+': '+(ok?'ONLINE':'REPLIES BUT BAD FORMAT')+' ('+(Date.now()-t0)+'ms)';
+      if(ok&&goodRoute==null)goodRoute=ROUTES.indexOf(route);
+    }catch(e){
+      line=route.name+': FAILED — '+String(e.message||e).slice(0,120);
+    }
+    addMsg(line,'jarvis');
+  }
+  addMsg(goodRoute!=null?('Primary route locked: '+ROUTES[goodRoute].name+'. We are operational, sir.'):'All routes down. Offline edits and shortcuts remain available — send me a screenshot of this readout.','jarvis');
+}
+
+/* ---------- act on decisions ---------- */
+function slug(s){return String(s||'panel').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'panel';}
+function validSpec(sp){return sp&&Array.isArray(sp.sections)&&sp.title;}
+async function applyAction(out){
+  switch(out.action){
+    case 'open':
+      if(out.panelId)openPanel(out.panelId);
+      break;
+    case 'create':{
+      if(!validSpec(out.spec))break;
+      out.spec.id=slug(out.spec.id||out.spec.title);
+      if(panels.some(p=>p.id===out.spec.id))out.spec.id+='-2';
+      panels.push(out.spec);
+      await savePanels(); renderAll(); openPanel(out.spec.id);
+      break;
+    }
+    case 'update':{
+      if(!validSpec(out.spec))break;
+      const id=out.panelId||out.spec.id;
+      const i=panels.findIndex(p=>p.id===id);
+      if(i>-1){ out.spec.id=panels[i].id; panels[i]=out.spec;
+        await savePanels(); renderAll(); openPanel(out.spec.id); }
+      break;
+    }
+    case 'delete':{
+      if(CORE_IDS.includes(out.panelId))break;
+      panels=panels.filter(p=>p.id!==out.panelId);
+      if(activePanel===out.panelId)activePanel=null;
+      await savePanels(); renderAll(); closePanels();
+      toast('PANEL REMOVED');
+      break;
+    }
+  }
+}
+
+/* ---------- Layer A local edit parser: instant offline mutations, no AI ----------
+   "add <thing> to <panel>[ called <name>]" → append a row to the best-matching panel
+   "update/set/change <row words> <n>" or "I hit <n> on <row>" → replace the numeric
+   value in the matching row, preserving trailing units (LB, %, …). */
+const EDIT_STOP=new Set(['hit','update','change','the','and','for','with','from','into','under','onto','was','now','new','just','today','panel','tab','set','lbs']);
+function byId(id){return panels.find(p=>p.id===id)||null;}
+function keywordPanel(s){
+  if(/schedule|today|class|timetable/.test(s))return byId('schedule');
+  if(/uni|apps|application|ucas|ucat|sat|deadline/.test(s))return byId('apps');
+  if(/train|gym|vertical|jump|workout|lift/.test(s))return byId('training');
+  if(/project|build/.test(s))return byId('projects');
+  if(/stat|profile|number/.test(s))return byId('stats');
+  if(/extracurric|\becs?\b|rating|activities/.test(s))return byId('ecs');
+  return null;
+}
+function localEdit(q){
+  const s=q.toLowerCase().trim();
+  // --- add a row ---
+  let m=q.match(/^add\s+(.+?)\s+(?:to|into|under)\s+(.+?)(?:\s+called\s+(.+))?$/i);
+  if(m){
+    const where=m[2].toLowerCase();
+    const p=findPanelByWords(where)||keywordPanel(where);
+    if(!p)return null;
+    const label=(m[3]||m[1]).trim();
+    p.sections[p.sections.length-1].rows.push({l:label,r:'NEW',warn:true});
+    savePanels(); renderAll(); openPanel(p.id);
+    return {reply:`"${label}" added to ${p.tab||p.title} — handled locally, sir.`,action:'none'};
+  }
+  // --- numeric update ---
+  const nums=q.match(/-?\d+(?:\.\d+)?/g);
+  if(!nums||nums.length!==1)return null;
+  const words=s.replace(/[^a-z0-9\s]/g,' ').split(/\s+/)
+    .filter(w=>w.length>2&&!EDIT_STOP.has(w)&&!/^\d/.test(w));
+  if(!words.length)return null;
+  let hit=null,hitP=null,bestLen=-1;
+  for(const p of panels)for(const sec of p.sections)for(const r of sec.rows){
+    const rl=String(r.l).toLowerCase();
+    if(words.every(w=>rl.includes(w))&&rl.length>bestLen){hit=r;hitP=p;bestLen=rl.length;}
+  }
+  if(!hit)return null;
+  const explicit=/^(update|set|change)\b/.test(s)||/\bhit\b/.test(s);
+  if(!explicit&&!/\d/.test(String(hit.r)))return null;   // don't guess on non-numeric rows
+  hit.r=/\d/.test(String(hit.r))
+    ? String(hit.r).replace(/-?\d+(?:\.\d+)?/,nums[0])   // keeps trailing units
+    : nums[0];
+  if(hit.meter!=null)hit.meter=Math.max(0,Math.min(100,+nums[0]));
+  savePanels(); renderAll(); openPanel(hitP.id);
+  return {reply:`${hit.l} set to ${hit.r} — handled locally, sir.`,action:'none'};
+}
+
+/* ---------- local fast intents ---------- */
+function localIntent(q){
+  const s=q.toLowerCase().trim();
+  if(/^(close|dismiss|hide)/.test(s)){closePanels();return{reply:'Panels dismissed.',action:'none'};}
+  if(/^reset panels?$/.test(s)){panels=defaultPanels();savePanels();renderAll();closePanels();
+    return{reply:'Dashboard restored to factory spec, sir.',action:'none'};}
+  if(/^(diagnostics?|debug|test uplink)$/.test(s)){runDiagnostics();return{reply:'Stand by.',action:'none'};}
+  if(/^export( panels)?$/.test(s)){
+    const payload='You are JARVIS, the AI layer of IAN.OS — the personal HUD of Ian (Grade 12, Bayview Glen, Toronto; dual-track Fall 2027: UK Medicine + North America Mechatronics).\n'+
+      'Below is the dashboard state. From now on, answer EVERY request I make in this chat with ONE raw JSON object only — no markdown fences, no prose outside it:\n'+
+      '{"reply":"1-3 sentence JARVIS-style reply","action":"open|create|update|delete|none","panelId":"id or null","spec":<full panel spec or null>}\n'+
+      'Panel spec shape: {"id":"kebab-case","title":"PANEL TITLE","tab":"Short Tab","sections":[{"label":"Section label or null","rows":[{"l":"Main text","sub":"small subtext (optional)","r":"RIGHT VALUE","warn":true (optional),"meter":0-100 (optional)}]}]}\n'+
+      'Rules: "update" must carry the COMPLETE panel spec (it replaces the whole panel). "create" invents a new kebab-case id. Never "delete" the core panels: '+CORE_IDS.join(', ')+'. I will paste your JSON straight back into the dashboard.\n\n'+
+      'CURRENT PANELS:\n'+JSON.stringify(panels);
+    let copied=false;
+    try{navigator.clipboard.writeText(payload).then(()=>{},()=>{});copied=true;}catch(_){}
+    if(!copied){
+      try{const ta=document.createElement('textarea');ta.value=payload;ta.style.cssText='position:fixed;opacity:0';
+        document.body.appendChild(ta);ta.select();copied=document.execCommand('copy');ta.remove();}catch(_){}
+    }
+    addMsg(payload,'jarvis');   // printed in full so it can be copied manually too
+    if(!copied)toast('CLIPBOARD BLOCKED — SELECT THE PRINTED BLOCK AND COPY MANUALLY');
+    return{reply:'Dashboard state copied, sir. Paste it to Claude, ask for anything, then paste Claude\u2019s JSON back here.',action:'none'};}
+  let um=q.match(/^set uplink\s+(https?:\/\/\S+)/i);
+  if(um){uplink=um[1].replace(/\/+$/,'');store.set(UPLINK_KEY,uplink);
+    return{reply:'Personal uplink locked to '+uplink.replace(/^https?:\/\//,'').slice(0,40)+'. Type "diagnostics" to confirm.',action:'none'};}
+  if(/^clear uplink$/.test(s)){uplink=null;store.set(UPLINK_KEY,'');
+    return{reply:'Personal uplink cleared, sir.',action:'none'};}
+  if(/^uplink( status)?$/.test(s))
+    return{reply:uplink?('Personal uplink: '+uplink):'No personal uplink set. Say "set uplink <your worker URL>".',action:'none'};
+  // common mutations are handled locally, before keyword-opens can swallow them
+  const edit=localEdit(q);
+  if(edit)return edit;
+  // anything else that edits goes to the AI
+  if(/(make|create|build me|new panel|add|update|change|edit|delete|remove|rename|set)/.test(s))return null;
+  if(/schedule|today|classes|timetable/.test(s))return{reply:'Pulling up today, sir.',action:'open',panelId:'schedule'};
+  if(/uni|university|application|ucas|ucat|deadline|sat|waterloo|common app/.test(s))return{reply:'University operations on screen.',action:'open',panelId:'apps'};
+  if(/train|gym|workout|vertical|jump|squat|clean/.test(s))return{reply:'Vertical protocol loaded. The rim isn\u2019t getting any lower.',action:'open',panelId:'training'};
+  if(/project|builds|clinicos|studyhub|wwmf|portfolio/.test(s))return{reply:'Active builds on display.',action:'open',panelId:'projects'};
+  if(/\bstats?\b|profile|numbers/.test(s))return{reply:'Your numbers, sir.',action:'open',panelId:'stats'};
+  if(/extracurric|\becs?\b|activities|rating|rate my/.test(s))return{reply:'Portfolio assessment on screen.',action:'open',panelId:'ecs'};
+  const hit=panels.find(p=>s.includes(p.id.replace(/-/g,' '))||s.includes((p.tab||'').toLowerCase())||s.includes(p.title.toLowerCase()));
+  if(hit)return{reply:'On screen.',action:'open',panelId:hit.id};
+  return null;
+}
+
+/* ---------- offline edit fallback (only runs if the AI is unreachable) ---------- */
+function findPanelByWords(s){
+  let best=null,bestLen=0;
+  for(const p of panels){
+    for(const name of [p.tab,p.title,p.id.replace(/-/g,' ')]){
+      const n=(name||'').toLowerCase();
+      if(n&&s.includes(n)&&n.length>bestLen){best=p;bestLen=n.length;}
+    }
+  }
+  return best;
+}
+async function offlineEdit(q){
+  const s=q.toLowerCase();
+  // "add ... called NAME" → new row in the named panel
+  let m=s.match(/add\b.*?\bcalled\s+(.+)$/);
+  if(m){
+    const p=findPanelByWords(s)||panels.find(x=>x.id===activePanel);
+    if(p){
+      const label=q.slice(q.toLowerCase().indexOf('called')+7).trim();
+      p.sections[p.sections.length-1].rows.push({l:label,r:'NEW',warn:true});
+      await savePanels(); renderAll(); openPanel(p.id);
+      return {reply:`"${label}" added to ${p.tab||p.title} — uplink was down, so I handled it locally.`,action:'none'};
+    }
+  }
+  // "update/set <row words> ... <number>" → change a row's value
+  m=s.match(/(?:update|set|change)\b(.*?)(\d+(?:\.\d+)?)/);
+  if(m){
+    const words=m[1].replace(/\b(my|the|pr|to|at|i|hit)\b/g,' ').trim().split(/\s+/).filter(w=>w.length>2);
+    for(const p of panels)for(const sec of p.sections)for(const r of sec.rows){
+      const rl=r.l.toLowerCase();
+      if(words.length&&words.every(w=>rl.includes(w))){
+        const unit=(String(r.r).match(/[A-Z%°/][A-Z%°/ ]*$/)||[''])[0].trim();
+        r.r=(m[2]+' '+unit).trim();
+        await savePanels(); renderAll(); openPanel(p.id);
+        return {reply:`${r.l} set to ${r.r} — uplink was down, handled locally.`,action:'none'};
+      }
+    }
+  }
+  return null;
+}
+
+/* ---------- send pipeline ---------- */
+const input=document.getElementById('cmdinput');
+let busy=false;
+async function send(q){
+  q=(q||input.value).trim();
+  if(!q||busy)return;
+  input.value='';
+  addMsg(q,'user');
+  setState('thinking');
+  busy=true;
+  const think=addThinking();
+  try{
+    let out=null;
+    if(q[0]==='{'){                       // pasted straight from a Claude chat
+      const direct=extractJSON(q);
+      if(direct&&direct.action){ out=direct; out.reply=direct.reply||'Imported directly, sir.'; }
+    }
+    if(!out) out=localIntent(q);
+    if(out){ await new Promise(r=>setTimeout(r,420)); }
+    else{
+      try{ out=await askJarvis(q); }
+      catch(err){
+        const fallback=await offlineEdit(q);
+        if(fallback)out=fallback;
+        else throw err;
+      }
+    }
+    think.remove();
+    addMsg(out.reply||'Done.','jarvis');
+    await applyAction(out);
+    speak(out.reply||'Done.');
+    if(!voiceOn)setState('idle');
+  }catch(err){
+    think.remove();
+    const msg=String(err.message||err);
+    addMsg('Uplink failure — '+msg,'jarvis');
+    if(/401|403|auth|key/i.test(msg))
+      toast('AI CHAT RUNS FREE INSIDE CLAUDE. ON GITHUB PAGES IT NEEDS A KEY PROXY.');
+    else if(/fetch|network|load/i.test(msg))
+      toast('NO ROUTE TO api.anthropic.com FROM HERE — SHORTCUTS AND OFFLINE EDITS STILL WORK.');
+    setState('idle');
+  }
+  busy=false;
+}
+document.getElementById('sendbtn').addEventListener('click',()=>send());
+input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();send();}});
+
+/* ---------- microphone ---------- */
+const micbtn=document.getElementById('micbtn');
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,listening=false;
+if(SR){
+  rec=new SR();
+  rec.lang='en-CA'; rec.interimResults=true; rec.continuous=false;
+  rec.onresult=e=>{
+    let final='',interim='';
+    for(const r of e.results)(r.isFinal?final+=r[0].transcript:interim+=r[0].transcript);
+    input.value=final||interim;
+    if(final){stopMic();send(final);}
+  };
+  rec.onerror=e=>{
+    stopMic();
+    if(e.error==='not-allowed'||e.error==='service-not-allowed')
+      toast('MIC BLOCKED IN THIS PREVIEW — WORKS ON YOUR GITHUB PAGES SITE');
+  };
+  rec.onend=()=>{if(listening)stopMic();};
+}
+function startMic(){
+  if(!rec){toast('SPEECH INPUT NEEDS CHROME, EDGE OR SAFARI');return;}
+  try{
+    synthOK&&speechSynthesis.cancel();
+    rec.start(); listening=true;
+    micbtn.classList.add('live');
+    setState('listening');
+    input.placeholder='Listening…';
+  }catch(_){}
+}
+function stopMic(){
+  listening=false;
+  micbtn.classList.remove('live');
+  input.placeholder='Speak or type — try “make a Pokémon panel”';
+  if(state==='listening')setState('idle');
+  try{rec&&rec.stop();}catch(_){}
+}
+micbtn.addEventListener('click',()=>listening?stopMic():startMic());
+
+/* ---------- boot ---------- */
+store.get(UPLINK_KEY).then(u=>{if(u)uplink=u;});
+loadPanels().then(()=>{
+  setTimeout(()=>{
+    addMsg('Systems online. Live AI when the uplink allows — otherwise type "export", ask Claude for anything, and paste its JSON straight back here. Your stats and EC ratings are already loaded, sir.','jarvis');
+  },700);
+});
+
+</script>
+</body>
 </html>
