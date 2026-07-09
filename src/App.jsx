@@ -26,6 +26,8 @@ const TABS = [
   { id: "gym", label: "Gym" },
   { id: "projects", label: "Proj" },
   { id: "me", label: "Me" },
+  // JARVIS is a standalone static page (public/jarvis/), not a React tab.
+  { id: "jarvis", label: "Jarvis", href: "jarvis/" },
 ];
 
 export default function App() {
@@ -98,13 +100,18 @@ export default function App() {
       </main>
 
       <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: C.ink, display: "flex", justifyContent: "space-around", padding: "10px 4px calc(10px + env(safe-area-inset-bottom))", overflowX: "auto" }}>
-        {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{
+        {TABS.map((t) => {
+          const style = {
             background: tab === t.id ? C.cobalt : "transparent", color: "#fff", border: "none", cursor: "pointer",
             borderRadius: 999, padding: "8px 13px", fontWeight: 800, fontSize: 13, whiteSpace: "nowrap",
             opacity: tab === t.id ? 1 : 0.65, transition: "opacity .15s",
-          }}>{t.label}</button>
-        ))}
+          };
+          return t.href ? (
+            <a key={t.id} href={t.href} style={{ ...style, textDecoration: "none", display: "inline-block" }}>{t.label}</a>
+          ) : (
+            <button key={t.id} onClick={() => setTab(t.id)} style={style}>{t.label}</button>
+          );
+        })}
       </nav>
     </div>
   );
