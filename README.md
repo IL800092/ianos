@@ -1,51 +1,53 @@
-# IAN.OS
+# IAN.OS // JARVIS
 
-Personal life-management dashboard. React + Vite, runs on any machine, deploys to GitHub Pages (same workflow as StudyHub).
+Iron-Man-HUD life-management dashboard. One self-contained static page —
+`index.html` at the repo root. No build step, no frameworks, **no API keys or
+external AI services**. Deploys to GitHub Pages automatically on push to `main`.
+
+> The previous React/Vite "life OS" app was retired in July 2026 — it lives on
+> in git history on `main` before that date. JARVIS replaced it as the whole site.
 
 ## Run it
 
-```bash
-npm install     # school WiFi blocks npm — use phone hotspot
-npm run dev     # local dev at http://localhost:5173
-npm run build   # production build → dist/
-```
+- **Local:** just open `index.html` in a browser. That's it.
+- **Deployed:** push to `main` → the Pages action publishes the repo root →
+  https://il800092.github.io/ianos/
 
-Deploy to GitHub Pages: push, then either use gh-pages (`npm i -D gh-pages` and add `"deploy": "gh-pages -d dist"`) or a Pages action — same as studyhub.
+## How the intelligence works
 
-## Structure
+Everything on the dashboard is a **panel spec** (JSON). The panels array is the
+whole app state, persisted to localStorage under `ianos-jarvis-panels-v6`.
+JARVIS can open, create, update, and delete panels — the first four core panels
+(`schedule`, `apps`, `training`, `projects`) can't be deleted, only updated.
 
-```
-src/
-├── main.jsx            entry point
-├── App.jsx             shell: tabs, state, save/load, MIGRATIONS
-├── theme.js            all colors + shared styles (edit look here)
-├── storage.js          persistence adapter (see below)
-├── data/seed.js        default data + weekly training plan
-├── utils/dates.js      date helpers
-├── components/
-│   ├── ui.jsx           Card, Eyebrow, Check, XBtn
-│   └── Runway.jsx       milestone countdown strip
-└── pages/
-    ├── Today.jsx        runway + today's session + tasks
-    ├── Calendar.jsx     month grid + per-day events
-    ├── Uni.jsx          UK Medicine + NA Mechatronics checklists
-    ├── Train.jsx        weekly split (static plan)
-    ├── Gym.jsx          exercise dropdown tracker with dated history
-    └── Projects.jsx     project cards
-```
+Three layers, tried in order:
 
-## Storage
+1. **Local intents** — instant, offline: open panels by keyword, plus a local
+   edit parser for common mutations (no AI involved).
+2. **Live AI uplink** — best effort, auto-failover. Works for free when the
+   page runs inside Claude (claude.ai artifact / app bridge). You can also
+   point it at your own proxy with `set uplink <url>`.
+3. **The paste pipeline** — the guaranteed free brain, works from GitHub Pages:
+   1. Type `export` — the full panel state + protocol instructions are copied
+      to your clipboard.
+   2. Paste into any Claude chat and ask for anything ("rate my ECs harder",
+      "build a UCAT prep panel", "make a Pokémon collection tab").
+   3. Paste Claude's JSON reply back into the JARVIS input — the panel swoops
+      in and persists.
 
-All data lives as one JSON blob under the key `ianos:v1`.
-`storage.js` auto-detects the environment:
+## Commands
 
-- **Claude artifact** → `window.storage` (persistent artifact storage)
-- **Anywhere else** (vite dev, GitHub Pages) → `localStorage`
-
-⚠️ These do NOT sync with each other. The artifact version and the deployed version each keep their own data.
+- Panel keywords — `today`, `uni apps`, `training`, `projects`, `stats`, `ecs`
+- `add <thing> to <panel>` — append a row (`add FRC practice to my projects`)
+- `update/set <row> <number>` or `I hit 125 on power clean` — change a value,
+  units preserved, handled locally
+- `close` / Esc — dismiss panels · `reset panels` — restore the six defaults
+- `export` — copy the Claude briefing package · `diagnostics` — per-route uplink check
+- `set uplink <url>` / `clear uplink` / `uplink status` — optional personal AI proxy
+- Mic button for voice input (en-CA), speaker button toggles spoken replies
 
 ## Editing later (with any AI model or by hand)
 
-- Drop this whole folder into a chat / Claude Code and describe the change — `CLAUDE.md` has the context a model needs.
-- To use an updated version **as a Claude artifact again**: ask the model to bundle `src/` back into a single .jsx file (inline the imports, keep `window.storage`).
-- New top-level data section? Add it to `SEED` in `data/seed.js` **and** patch it in `migrate()` in `App.jsx` so existing saved data picks it up.
+Drop the repo (or just `index.html`) into a chat / Claude Code and describe the
+change — `CLAUDE.md` has the context a model needs. The panel spec protocol is
+documented there and inside the page's `export` payload.
