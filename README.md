@@ -34,6 +34,39 @@ src/
     └── Projects.jsx     project cards
 ```
 
+## JARVIS
+
+`public/jarvis/index.html` — an Iron-Man-HUD life dashboard layered on top of IAN.OS.
+Single self-contained static page (no build step, no frameworks, **no API keys or
+external AI services**). Deployed at `/jarvis/` on GitHub Pages; also opens straight
+from the file. Linked from the main app's bottom nav ("Jarvis").
+
+It reads the main app's saved state (`ianos:v1`) when present — latest gym log
+weights land in the Vertical Protocol panel, open tasks in Today, and checklist
+progress in University Ops. Its own panels persist under `ianos-jarvis-panels-v6`.
+
+**The brain is Claude, via the export/paste pipeline:**
+
+1. Type `export` — JARVIS copies its full panel state plus protocol instructions
+   to the clipboard.
+2. Paste that into any Claude chat and ask for anything ("rate my ECs harder",
+   "build a UCAT prep panel", "make a Pokémon collection tab").
+3. Paste Claude's JSON reply back into the JARVIS input — the panel swoops in
+   and persists.
+
+A live uplink is also attempted automatically (claude.ai's free proxy or
+`window.claude.complete`) when the page runs somewhere that provides one;
+everywhere else the local layer + paste pipeline covers everything.
+
+**Commands** (all local, work fully offline):
+
+- Panel names / keywords — `show my training`, `today`, `uni`, `builds`, `stats`, `ecs`
+- `add <thing> to <panel>` — append a row (`add FRC practice to my builds`)
+- `update/set <row> <number>` or `I hit 125 on power clean` — change a value, units kept
+- `close` / `esc` — dismiss panels · `reset panels` — restore the six defaults
+- `export` — copy the Claude briefing package · `diagnostics` — per-route uplink check
+- MIC button for voice input, VOX for spoken replies
+
 ## Storage
 
 All data lives as one JSON blob under the key `ianos:v1`.
