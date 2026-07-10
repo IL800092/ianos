@@ -15,10 +15,34 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # JARVIS is a plain static site (index.html at the repo root) — no build step.
+      # ATLAS (atlas/) is a Vite app — build it and publish the output under
+      # /atlas/ on the site. Served statically it stores data in the browser
+      # (no Express backend on Pages).
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: atlas/package-lock.json
+
+      - name: Build ATLAS
+        working-directory: atlas
+        env:
+          ATLAS_BASE: /ianos/atlas/
+        run: |
+          npm ci
+          npm run build
+
+      # JARVIS stays a plain static site (index.html at the repo root — no
+      # build step). Stage it together with the built ATLAS app.
+      - name: Assemble site
+        run: |
+          mkdir -p _site/atlas
+          cp index.html _site/
+          cp -r atlas/dist/. _site/atlas/
+
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          exclude_assets: '.github,node_modules,README.md,CLAUDE.md'
+          publish_dir: ./_site

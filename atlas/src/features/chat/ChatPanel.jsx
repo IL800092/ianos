@@ -17,6 +17,10 @@ function NoKeyState() {
         <code className="font-mono text-accent/90">ANTHROPIC_API_KEY</code>, and
         restart <code className="font-mono text-accent/90">npm run dev</code>.
       </p>
+      <p className="text-xs text-dim/60 max-w-sm">
+        On the hosted/phone version there's no server to hold a key, so chat
+        stays offline — everything else works and saves to this device.
+      </p>
     </div>
   )
 }
