@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Design tokens ─────────────────────────────────────────────────────────
+   Single source of truth for the theme. RGB triplets so Tailwind can apply
+   alpha. Change the accent here to retheme the whole app.               */
+:root {
+  --c-bg: 4 8 15; /* near-black navy  #04080f */
+  --c-raised: 9 15 27; /* raised surfaces  #090f1b */
+  --c-panel: 13 20 34; /* glass panel base #0d1422 */
+  --c-edge: 38 52 78; /* hairline borders #26344e */
+  --c-ink: 226 238 250; /* primary text     #e2eefa */
+  --c-dim: 122 145 176; /* secondary text   #7a91b0 */
+  --c-accent: 34 211 238; /* electric cyan    #22d3ee */
+  --c-accent-deep: 8 145 178; /* chart cyan       #0891b2 (validated) */
+  --c-violet: 124 111 208; /* chart violet     #7c6fd0 (validated) */
+  --c-ok: 52 211 153; /* status green     #34d399 */
+  --c-warn: 251 191 36; /* status amber     #fbbf24 */
+  --c-danger: 248 113 113; /* status red       #f87171 */
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-bg text-ink font-body antialiased;
+  background-image:
+    radial-gradient(1200px 600px at 85% -10%, rgb(var(--c-accent) / 0.06), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgb(var(--c-violet) / 0.05), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Frosted panel */
+.glass {
+  @apply rounded-xl border border-edge/60;
+  background: linear-gradient(
+    160deg,
+    rgb(var(--c-panel) / 0.85),
+    rgb(var(--c-raised) / 0.75)
+  );
+  backdrop-filter: blur(12px);
+}
+
+.hairline {
+  border-color: rgb(var(--c-edge) / 0.6);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-edge) / 0.8);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+input,
+select,
+textarea {
+  @apply bg-raised border border-edge/60 rounded-lg px-3 py-2 text-sm text-ink placeholder:text-dim/60 outline-none focus:border-accent/60 transition-colors;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
